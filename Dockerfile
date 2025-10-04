@@ -1,17 +1,40 @@
+# ==============================
+# 🏗️ Stage 1 — Build Stage
+# ==============================
+FROM node:18-alpine AS builder
 
-FROM node:18-alpine
+# Set working directory
 WORKDIR /app
 
-# copy package files and install server deps
-COPY package.json package-lock.json* ./
-RUN npm install --production
+# Copy package files
+COPY package*.json ./
 
-# copy server + client source
-COPY server ./server
-COPY client ./client
+# Install dependencies (use npm ci for clean install)
+RUN npm ci --only=production
 
-# build client
-RUN cd client && npm install && npm run build
+# Copy source code
+COPY . .
 
-EXPOSE 10000
-CMD ["node", "server/index.js"]
+# ==============================
+# 🚀 Stage 2 — Runtime Stage
+# ==============================
+FROM node:18-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy built app from builder
+COPY --from=builder /app /app
+
+# Copy environment file (optional, for local builds)
+# In Render or Docker Compose, .env is automatically injected
+# COPY .env .env
+
+# Expose the app port (matches .env PORT)
+EXPOSE ${PORT}
+
+# Default environment
+ENV NODE_ENV=production
+
+# Run the app
+CMD ["npm", "start"]
