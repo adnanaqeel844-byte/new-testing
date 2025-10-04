@@ -11,4 +11,10 @@
     "start": "react-scripts start",
     "build": "react-scripts build"
   }
+
+  "scripts": {
+  "start": "node server.js"
+  }
+
+
 }
